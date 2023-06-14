@@ -1,15 +1,8 @@
 from app import schemas
-from .database import client, session
 import pytest
 from fastapi import status, HTTPException
 from app.oauth2 import verify_access_token
-
-
-def create_user(client, email, password):
-    response = client.post("/users/", json={"email": email, "password": password})
-    created_user = schemas.UserResponse(**response.json())
-    assert response.status_code == 200
-    assert created_user.email == email
+from .conftest import create_user
 
 
 # root endpoint
@@ -51,7 +44,7 @@ def test_create_user(client, email, password):
 )
 def test_login_user(client, username, password):
     """Testing the login user endpoint"""
-    create_user(client, username, password)
+    new_user = create_user(client, username, password)
     response = client.post(
         "/login", data={"username": f"{username}", "password": f"{password}"}
     )
@@ -66,3 +59,21 @@ def test_login_user(client, username, password):
     ):
         assert response.status_code == 201
         assert login_token.token_type == "bearer"
+
+# incorrect login user endpoint
+@pytest.mark.parametrize(
+    "username, password",
+    [
+        ("testing@gmail.com", "password123"),
+        ("fightclub@gmail.com", "hollywood"),
+        ("terenaam@gmail.com", "bollywood"),
+    ],
+)
+def test_incorrect_login_user(client, username, password):
+    '''Testing the incorrect login user endpoint'''
+    new_user = create_user(client, username, password)
+    response = client.post(
+        "/login", data={"username": f"{username}", "password": f"{password}_"}
+    )
+    assert response.status_code == 403
+    assert response.json().get("detail") == "Invalid Credentials!"
