@@ -1,11 +1,12 @@
 name: Build and Deploy
-on: [push, pull_requests]
+
+on: [push, pull_request]
 
 jobs:
   job1:
     runs-on: ubuntu-latest
     steps:
-      -name: Pull Code
-       uses: actions/checkout@v3
-      -name: Hello
-       run: echo "Hello World!"
+      - name: Pull Code
+        uses: actions/checkout@v3
+      - name: Hello
+        run: echo "Hello World!"
